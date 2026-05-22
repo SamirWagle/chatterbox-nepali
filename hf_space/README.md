@@ -14,5 +14,6 @@ license: mit
 
 Gradio Space for Nepali text-to-speech with reference-audio voice cloning.
 
-Set `HF_MODEL_REPO` to the Hugging Face model repository that contains
-`t3_mtl_nepali_final.safetensors`, or upload that file directly into the Space.
+By default, the app loads `t3_mtl_nepali_final.safetensors` from
+`waglesameer5/chatterbox-nepali`. Set `HF_MODEL_REPO` to override that model
+repository, or upload the checkpoint directly into the Space.

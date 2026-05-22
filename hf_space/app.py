@@ -13,7 +13,7 @@ from chatterbox.mtl_tts import ChatterboxMultilingualTTS
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 CHECKPOINT_FILENAME = os.getenv("CHECKPOINT_FILENAME", "t3_mtl_nepali_final.safetensors")
-HF_MODEL_REPO = os.getenv("HF_MODEL_REPO", "officialuser/chatterbox-nepali")
+HF_MODEL_REPO = os.getenv("HF_MODEL_REPO", "waglesameer5/chatterbox-nepali")
 
 
 def set_seed(seed: int) -> None:
