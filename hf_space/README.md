@@ -1,6 +1,6 @@
 ---
 title: Chatterbox Nepali TTS
-emoji: 🇳🇵
+emoji: 🎙️
 colorFrom: red
 colorTo: blue
 sdk: gradio
