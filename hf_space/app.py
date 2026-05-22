@@ -14,6 +14,12 @@ from chatterbox.mtl_tts import ChatterboxMultilingualTTS
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 CHECKPOINT_FILENAME = os.getenv("CHECKPOINT_FILENAME", "t3_mtl_nepali_final.safetensors")
 HF_MODEL_REPO = os.getenv("HF_MODEL_REPO", "waglesameer5/chatterbox-nepali")
+BASE_DIR = Path(__file__).resolve().parent
+BUILTIN_VOICES = {
+    "Benisha sample": BASE_DIR / "assets" / "benisha_ref_0012_16k.wav",
+    "Achyut sample": BASE_DIR / "assets" / "achyut_ref_10s.wav",
+}
+REFERENCE_CHOICES = ["Benisha sample", "Achyut sample", "Upload audio", "Record microphone"]
 
 
 def set_seed(seed: int) -> None:
@@ -64,7 +70,9 @@ def get_model() -> ChatterboxMultilingualTTS:
 
 def generate(
     text: str,
-    ref_audio: str,
+    reference_source: str,
+    uploaded_audio: str,
+    recorded_audio: str,
     exaggeration: float,
     temperature: float,
     top_p: float,
@@ -73,8 +81,19 @@ def generate(
 ):
     if not text or not text.strip():
         raise gr.Error("Please enter Nepali text.")
+
+    ref_audio = None
+    if reference_source in BUILTIN_VOICES:
+        ref_audio = str(BUILTIN_VOICES[reference_source])
+    elif reference_source == "Upload audio":
+        ref_audio = uploaded_audio
+    elif reference_source == "Record microphone":
+        ref_audio = recorded_audio
+
     if not ref_audio:
-        raise gr.Error("Please upload a clean 5-10 second reference voice.")
+        raise gr.Error("Please choose, upload, or record a clean 5-10 second reference voice.")
+    if not Path(ref_audio).exists():
+        raise gr.Error("Reference audio file was not found. Please try uploading or recording again.")
 
     if seed:
         set_seed(int(seed))
@@ -97,6 +116,15 @@ def generate(
     return (model.sr, audio.numpy())
 
 
+def update_reference_inputs(reference_source: str):
+    builtin_path = BUILTIN_VOICES.get(reference_source)
+    return (
+        gr.update(visible=reference_source == "Upload audio"),
+        gr.update(visible=reference_source == "Record microphone"),
+        gr.update(value=str(builtin_path) if builtin_path else None, visible=builtin_path is not None),
+    )
+
+
 with gr.Blocks(title="Chatterbox Nepali TTS") as demo:
     gr.Markdown("# Chatterbox Nepali TTS")
     gr.Markdown("Nepali text-to-speech with reference-audio voice cloning.")
@@ -108,7 +136,31 @@ with gr.Blocks(title="Chatterbox Nepali TTS") as demo:
                 lines=5,
                 value="नमस्ते, म नेपाली आवाजको गुणस्तर परीक्षण गर्दैछु।",
             )
-            ref_audio = gr.Audio(label="Reference voice", type="filepath")
+            reference_source = gr.Dropdown(
+                choices=REFERENCE_CHOICES,
+                value="Benisha sample",
+                label="Reference voice source",
+            )
+            builtin_preview = gr.Audio(
+                label="Selected sample voice",
+                value=str(BUILTIN_VOICES["Benisha sample"]),
+                type="filepath",
+                interactive=False,
+            )
+            uploaded_audio = gr.Audio(
+                label="Upload reference voice",
+                sources=["upload"],
+                type="filepath",
+                format="wav",
+                visible=False,
+            )
+            recorded_audio = gr.Audio(
+                label="Record reference voice",
+                sources=["microphone"],
+                type="filepath",
+                format="wav",
+                visible=False,
+            )
 
             with gr.Accordion("Advanced settings", open=False):
                 exaggeration = gr.Slider(0.0, 1.0, value=0.5, label="Exaggeration")
@@ -122,9 +174,34 @@ with gr.Blocks(title="Chatterbox Nepali TTS") as demo:
         with gr.Column():
             output = gr.Audio(label="Generated audio")
 
+    gr.Examples(
+        examples=[
+            ["नमस्ते, म नेपाली आवाजको गुणस्तर परीक्षण गर्दैछु।", "Benisha sample"],
+            ["आज काठमाडौँमा मौसम सफा छ, तर बेलुका हल्का चिसो बढ्न सक्छ।", "Benisha sample"],
+            ["रेडियो समाचार पढ्दा गति धेरै छिटो पनि हुनु हुँदैन, धेरै ढिलो पनि हुनु हुँदैन।", "Achyut sample"],
+        ],
+        inputs=[text, reference_source],
+    )
+
+    reference_source.change(
+        update_reference_inputs,
+        inputs=[reference_source],
+        outputs=[uploaded_audio, recorded_audio, builtin_preview],
+    )
+
     button.click(
         generate,
-        inputs=[text, ref_audio, exaggeration, temperature, top_p, repetition_penalty, seed],
+        inputs=[
+            text,
+            reference_source,
+            uploaded_audio,
+            recorded_audio,
+            exaggeration,
+            temperature,
+            top_p,
+            repetition_penalty,
+            seed,
+        ],
         outputs=output,
     )
 
