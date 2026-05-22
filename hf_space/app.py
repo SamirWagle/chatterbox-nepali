@@ -130,4 +130,8 @@ with gr.Blocks(title="Chatterbox Nepali TTS") as demo:
 
 
 if __name__ == "__main__":
-    demo.queue(max_size=8).launch()
+    demo.queue(max_size=8).launch(
+        server_name="0.0.0.0",
+        server_port=int(os.getenv("PORT", "7860")),
+        ssr_mode=False,
+    )
