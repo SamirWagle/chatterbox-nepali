@@ -1,9 +1,11 @@
 import os
 import random
+import tempfile
 from pathlib import Path
 
 import gradio as gr
 import numpy as np
+import soundfile as sf
 import torch
 from huggingface_hub import hf_hub_download
 from safetensors.torch import load_file
@@ -68,6 +70,28 @@ def get_model() -> ChatterboxMultilingualTTS:
     return MODEL
 
 
+def recorded_audio_to_file(recorded_audio) -> str | None:
+    if recorded_audio is None:
+        return None
+    if isinstance(recorded_audio, (str, Path)):
+        return str(recorded_audio)
+
+    sample_rate, audio = recorded_audio
+    audio = np.asarray(audio)
+    if audio.ndim == 2 and audio.shape[1] > 1:
+        audio = audio.mean(axis=1)
+    if np.issubdtype(audio.dtype, np.integer):
+        max_value = np.iinfo(audio.dtype).max
+        audio = audio.astype(np.float32) / max_value
+    else:
+        audio = audio.astype(np.float32)
+
+    tmp = tempfile.NamedTemporaryFile(prefix="recorded_reference_", suffix=".wav", delete=False)
+    tmp.close()
+    sf.write(tmp.name, audio, int(sample_rate))
+    return tmp.name
+
+
 def generate(
     text: str,
     reference_source: str,
@@ -88,7 +112,7 @@ def generate(
     elif reference_source == "Upload audio":
         ref_audio = uploaded_audio
     elif reference_source == "Record microphone":
-        ref_audio = recorded_audio
+        ref_audio = recorded_audio_to_file(recorded_audio)
 
     if not ref_audio:
         raise gr.Error("Please choose, upload, or record a clean 5-10 second reference voice.")
@@ -157,7 +181,7 @@ with gr.Blocks(title="Chatterbox Nepali TTS") as demo:
             recorded_audio = gr.Audio(
                 label="Record reference voice",
                 sources=["microphone"],
-                type="filepath",
+                type="numpy",
                 format="wav",
                 visible=False,
             )
