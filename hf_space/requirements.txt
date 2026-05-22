@@ -1,0 +1,5 @@
+git+https://github.com/SamirWagle/chatterbox-nepali.git
+huggingface_hub==0.36.2
+gradio==6.8.0
+safetensors==0.5.3
+soundfile==0.13.1

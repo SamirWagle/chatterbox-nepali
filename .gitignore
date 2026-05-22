@@ -43,6 +43,12 @@ pip-delete-this-directory.txt
 syn_out/
 checkpoints/
 .gradio
+logs/
+data/
+cuda_deps/
+venv*/
+batch_outputs*/
+hf_space/.cache/
 
 # Ignore generated sample .wav files
 **/*.wav

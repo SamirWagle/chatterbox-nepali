@@ -24,6 +24,7 @@ dependencies = [
     "resemble-perth @ git+https://github.com/resemble-ai/Perth.git@master",
     "conformer==0.3.2",
     "safetensors==0.5.3",
+    "soundfile==0.13.1",
     "spacy-pkuseg",
     "pykakasi==2.3.0",
     "gradio==6.8.0",

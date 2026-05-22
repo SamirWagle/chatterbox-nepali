@@ -1,6 +1,6 @@
 import argparse
 import torch
-import torchaudio
+import soundfile as sf
 from pathlib import Path
 from chatterbox.mtl_tts import ChatterboxMultilingualTTS
 
@@ -47,7 +47,10 @@ def main():
                 top_p=args.top_p
             )
             
-            torchaudio.save(args.output, val_wav, model_wrapper.sr)
+            audio = val_wav.detach().cpu()
+            if audio.ndim == 2:
+                audio = audio.squeeze(0)
+            sf.write(args.output, audio.numpy(), model_wrapper.sr)
             print(f"✅ Success! Audio saved to {args.output}")
             
         except Exception as e:
