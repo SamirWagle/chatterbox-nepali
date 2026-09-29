@@ -1,25 +1,25 @@
 # 🇳🇵 Chatterbox-TTS (Nepali Edition)
 
-Fine-tuned text-to-speech for the Nepali language, based on the **Chatterbox-Multilingual-500M** architecture. This repository contains the custom training logic, bug fixes for the Devanagari script, and tools for high-fidelity Nepali voice cloning.
+Experimental Nepali text-to-speech adaptation based on the **Chatterbox-Multilingual-500M** architecture. This repository contains custom training logic, Devanagari fixes, and voice-cloning experiments. Formal perceptual-quality evaluation remains open work.
 
 ![Nepali TTS Preview](./Chatterbox-Multilingual.png)
 
 ## 🚀 Key Features
 * **Full Devanagari Support**: Patched tokenizer and alignment analyzer to handle complex Nepali character clusters without cutting off.
-* **Seamless Voice Cloning**: High-quality zero-shot cloning of Nepali voices using a 5-10 second reference clip.
+* **Voice Cloning Workflow**: Zero-shot cloning experiments using a 5-10 second reference clip.
 * **Optimized for Mac**: Pre-configured for **Apple Silicon (MPS)** acceleration and memory-efficient training on M2/M3 chips.
 * **Clean Inference**: Dedicated Gradio UI and test scripts for rapid experimentation.
 
 ## 📦 Model Checkpoints
 To ensure repository performance, large training checkpoints are hosted on Hugging Face:
-- **Repo Link**: [https://huggingface.co/officialuser/chatterbox-nepali](https://huggingface.co/officialuser/chatterbox-nepali)
+- **Model Link**: [https://huggingface.co/waglesameer5/chatterbox-nepali](https://huggingface.co/waglesameer5/chatterbox-nepali)
 
 | File | Purpose | Recommendation |
 | :--- | :--- | :--- |
 | `t3_nepali_epoch_20.pt` | **Base Nepali Checkpoint** | Use for **quick testing** or as a starting point to **train further**. |
 
 > [!TIP]
-> While the provided checkpoint works for testing, we recommend training for **50 to 100 epochs** on your dedicated dataset to achieve significantly more natural-sounding voices and smoother Nepali prosody.
+> The provided checkpoint is an experimental starting point. More epochs do not guarantee better perceptual quality; validate every checkpoint with held-out text and structured listening tests.
 
 *Place this file in the root folder of this repository after downloading.*
 
@@ -34,7 +34,7 @@ conda create -n chatterbox_ne python=3.11 -y
 conda activate chatterbox_ne
 
 # 2. Clone the repository
-git clone https://github.com/officialuser/chatterbox-nepali.git
+git clone https://github.com/SamirWagle/chatterbox-nepali.git
 cd chatterbox-nepali
 
 # 3. Install dependencies in editable mode
@@ -127,8 +127,8 @@ python3 src/chatterbox/train_nepali.py \
 ## 🎯 Post-Training (Safetensors Generation)
 Once your training reaches the final epoch (e.g. 50), the script will automatically consolidate your efforts and generate a high-performance **`t3_mtl_nepali_final.safetensors`** file.
 
-### Using your Optimized Safetensors:
-Loading the finished `.safetensors` format is significantly **faster** and more secure than resuming from `.pt` checkpoints. You can use it in production with the following logic:
+### Using the exported Safetensors checkpoint
+Safetensors avoids pickle-based deserialization. Treat the exported checkpoint as an evaluation artifact until quality, latency, provenance, and deployment behavior are validated for your use case.
 
 ```bash
 # Use the same test script but point to your final safetensors
@@ -141,14 +141,14 @@ python3 test_nepali.py \
 
 ---
 
-## 🛠️ Critical Bug Fixes (Patched in this Fork)
-This fork includes essential fixes for Devanagari that are **not available** in the original repository:
+## 🛠️ Nepali adaptation changes
+This adaptation includes changes required by its current Devanagari workflow:
 * **Causal Shift Fix**: Fixed the next-token prediction loss in `t3.py`.
 * **Tokenizer Logic**: Prevented double-prepending of `[ne]` tags.
 * **Alignment Safety**: Increased repetition tolerance in `alignment_stream_analyzer.py` to stop early audio cutoffs on long Nepali vowels.
 
 ## 📄 License & Credits
 * Original architecture by **Resemble AI**.
-* Fine-tuning and Nepali optimization by **officialuser**.
+* Fine-tuning and Nepali adaptation by **Samir Wagle**.
 * Reference Audio in samples by **Achyut Ghimire (Bulbul)**.
 * Distributed under the **MIT License**.
